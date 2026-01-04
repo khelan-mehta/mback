@@ -1,10 +1,9 @@
 import dotenv from "dotenv";
-dotenv.config(); // ✅ MUST be first
+dotenv.config();
 
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import session from "express-session";
 import passport from "passport";
 
 import connectDB from "./config/database.js";
@@ -22,43 +21,21 @@ import reviewRoutes from "./routes/review.js";
 import tutoringRoutes from "./routes/tutoring.js";
 import adminRoutes from "./routes/admin.js";
 
-// Connect DB
-connectDB();
+connectDB().catch(console.error);
 
-// Init app
 const app = express();
 
-// Passport
 configurePassport();
 
-// Middleware
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // allow requests with no origin (mobile apps, curl, postman)
-      callback(null, true);
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(
-  session({
-    secret: process.env.JWT_SECRET || "secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000,
-    },
-  })
-);
 app.use(passport.initialize());
-app.use(passport.session());
 
 // Routes
 app.get("/", (req, res) => {
@@ -75,12 +52,7 @@ app.use("/api/v1/review", reviewRoutes);
 app.use("/api/v1/tutoring", tutoringRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
-// Errors
 app.use(notFound);
 app.use(errorHandler);
 
-// Start
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;
