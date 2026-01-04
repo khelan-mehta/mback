@@ -27,10 +27,18 @@ const app = express();
 
 configurePassport();
 
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow localhost + deployed frontend + tools like Postman
+      callback(null, origin || "*");
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
